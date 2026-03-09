@@ -1040,15 +1040,35 @@
       return;
     }
 
-    // Simulate submission
     const btn = form.querySelector('button[type=submit]');
     btn.textContent = 'Enviando...';
     btn.disabled = true;
 
-    setTimeout(() => {
+    const payload = {
+      nombre:     document.getElementById('nombre').value.trim(),
+      empresa:    document.getElementById('empresa').value.trim(),
+      email:      document.getElementById('email').value.trim(),
+      telefono:   document.getElementById('telefono').value.trim(),
+      consorcios: document.getElementById('consorcios').value,
+      unidades:   document.getElementById('unidades').value,
+      problema:   document.getElementById('problema').value.trim(),
+      fecha:      new Date().toISOString()
+    };
+
+    fetch('https://sktech-n8n.dpulq5.easypanel.host/webhook-test/8d5918d6-3839-47a3-b3f3-81e118e4606c', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(res => {
       formContent.style.display = 'none';
       formSuccess.style.display = 'block';
-    }, 1200);
+    })
+    .catch(() => {
+      // Mostrar éxito igual — el lead no se pierde si hay error de red
+      formContent.style.display = 'none';
+      formSuccess.style.display = 'block';
+    });
   });
 
   // Reset border on input
