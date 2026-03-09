@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SKTech — Automatizá tu Administración de Consorcios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-deep:    #080514;
+      --bg-dark:    #1F1346;
+      --bg-mid:     #2f1c6a;
+      --purple:     #673de6;
+      --purple-lt:  #8b68f0;
+      --blue:       #357df9;
+      --blue-lt:    #60a5fa;
+      --white:      #f2f3f6;
+      --muted:      #a0a5c0;
+      --glass-bg:   rgba(103, 61, 230, 0.08);
+      --glass-bd:   rgba(103, 61, 230, 0.25);
+      --glass-hover:rgba(103, 61, 230, 0.18);
+      --radius:     16px;
+      --radius-sm:  10px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-deep);
+      color: var(--white);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ── BACKGROUND ORBS ── */
+    .bg-orbs {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      overflow: hidden;
+    }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.25;
+    }
+    .orb-1 { width: 600px; height: 600px; background: var(--purple); top: -200px; left: -200px; animation: drift1 18s ease-in-out infinite alternate; }
+    .orb-2 { width: 500px; height: 500px; background: var(--blue); bottom: -150px; right: -150px; animation: drift2 22s ease-in-out infinite alternate; }
+    .orb-3 { width: 350px; height: 350px; background: #9b59b6; top: 50%; left: 50%; transform: translate(-50%, -50%); animation: drift3 15s ease-in-out infinite alternate; }
+
+    @keyframes drift1 { to { transform: translate(60px, 80px); } }
+    @keyframes drift2 { to { transform: translate(-60px, -80px); } }
+    @keyframes drift3 { to { transform: translate(-50%, -50%) scale(1.3); opacity: 0.15; } }
+
+    /* ── UTILITIES ── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+    .text-center { text-align: center; }
+    .gradient-text {
+      background: linear-gradient(135deg, var(--purple-lt), var(--blue-lt));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .glass-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-bd);
+      border-radius: var(--radius);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+    }
+    .glass-card:hover {
+      background: var(--glass-hover);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 60px rgba(103, 61, 230, 0.2);
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, var(--purple), var(--blue));
+      color: #fff; font-weight: 700; font-size: 1rem;
+      padding: 14px 32px; border-radius: 50px; border: none; cursor: pointer;
+      text-decoration: none; transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 8px 30px rgba(103, 61, 230, 0.4);
+    }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 12px 40px rgba(103, 61, 230, 0.55); }
+    .btn-outline {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: transparent; color: var(--white);
+      border: 1.5px solid rgba(255,255,255,0.3);
+      font-weight: 600; font-size: 1rem;
+      padding: 14px 32px; border-radius: 50px; cursor: pointer;
+      text-decoration: none; transition: border-color 0.2s, background 0.2s;
+    }
+    .btn-outline:hover { border-color: var(--purple-lt); background: rgba(103,61,230,0.12); }
+
+    /* ── FADE IN ON SCROLL ── */
+    .fade-in { opacity: 0; transform: translateY(30px); transition: opacity 0.7s ease, transform 0.7s ease; }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+    .fade-in-delay-1 { transition-delay: 0.1s; }
+    .fade-in-delay-2 { transition-delay: 0.2s; }
+    .fade-in-delay-3 { transition-delay: 0.3s; }
+    .fade-in-delay-4 { transition-delay: 0.4s; }
+
+    /* ── NAVBAR ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      padding: 16px 0;
+      transition: background 0.3s, backdrop-filter 0.3s, box-shadow 0.3s;
+    }
+    nav.scrolled {
+      background: rgba(8, 5, 20, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 2px 30px rgba(0,0,0,0.4);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo {
+      display: flex; align-items: center; gap: 12px; text-decoration: none;
+    }
+    .logo-svg { height: 42px; width: auto; flex-shrink: 0; }
+    .logo-labels { display: flex; flex-direction: column; line-height: 1.15; }
+    .logo-name {
+      font-size: 1.05rem; font-weight: 900; color: #fff;
+      letter-spacing: 0.18em; text-transform: uppercase;
+    }
+    .logo-tagline {
+      font-size: 0.6rem; font-weight: 400; color: var(--muted);
+      letter-spacing: 0.08em; text-transform: uppercase;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; align-items: center;
+      padding: 120px 0 80px;
+      position: relative; overflow: hidden;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(103,61,230,0.15);
+      border: 1px solid rgba(103,61,230,0.3);
+      border-radius: 50px; padding: 6px 16px;
+      font-size: 0.8rem; font-weight: 600; color: var(--purple-lt);
+      margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.6rem);
+      font-weight: 900; line-height: 1.1;
+      margin-bottom: 20px;
+      letter-spacing: -0.02em;
+    }
+    .hero p {
+      font-size: 1.15rem; color: var(--muted);
+      margin-bottom: 36px; max-width: 500px;
+    }
+    .hero-ctas { display: flex; gap: 16px; flex-wrap: wrap; }
+    .hero-visual {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .hero-card {
+      padding: 20px;
+      border-radius: var(--radius-sm);
+      text-align: center;
+    }
+    .hero-card .icon { font-size: 2rem; margin-bottom: 10px; }
+    .hero-card .label { font-size: 0.85rem; font-weight: 600; color: var(--white); margin-bottom: 4px; }
+    .hero-card .sub { font-size: 0.75rem; color: var(--muted); }
+    .hero-card-big {
+      grid-column: span 2;
+      background: linear-gradient(135deg, rgba(103,61,230,0.2), rgba(53,125,249,0.2));
+      border: 1px solid rgba(103,61,230,0.35);
+      border-radius: var(--radius);
+      padding: 24px; text-align: center;
+    }
+    .hero-stat { font-size: 2.8rem; font-weight: 900; }
+    .hero-stat-label { color: var(--muted); font-size: 0.95rem; margin-top: 4px; }
+    .floating {
+      animation: float 4s ease-in-out infinite;
+    }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+    /* ── SECTION COMMON ── */
+    section { padding: 90px 0; position: relative; z-index: 1; }
+    .section-label {
+      display: inline-block;
+      font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--purple-lt);
+      margin-bottom: 14px;
+    }
+    .section-title {
+      font-size: clamp(1.8rem, 3.5vw, 2.7rem);
+      font-weight: 800; line-height: 1.2; margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+    .section-sub {
+      font-size: 1.05rem; color: var(--muted);
+      max-width: 580px; margin: 0 auto 56px;
+    }
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 24px;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+      gap: 32px;
+    }
+
+    /* ── PAIN POINTS ── */
+    .pain-section { background: rgba(31, 19, 70, 0.4); }
+    .pain-card {
+      padding: 28px; border-radius: var(--radius);
+      border-left: 3px solid rgba(255,80,80,0.5);
+      background: rgba(255,80,80,0.05);
+      border-top: 1px solid rgba(255,80,80,0.15);
+      border-right: 1px solid rgba(255,80,80,0.08);
+      border-bottom: 1px solid rgba(255,80,80,0.08);
+      transition: transform 0.3s;
+    }
+    .pain-card:hover { transform: translateY(-4px); }
+    .pain-icon { font-size: 1.8rem; margin-bottom: 14px; }
+    .pain-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+    .pain-card p { font-size: 0.88rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── BENEFITS ── */
+    .benefit-card { padding: 32px; }
+    .benefit-icon {
+      width: 52px; height: 52px;
+      background: linear-gradient(135deg, var(--purple), var(--blue));
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; margin-bottom: 20px;
+    }
+    .benefit-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 10px; }
+    .benefit-card p { font-size: 0.88rem; color: var(--muted); line-height: 1.65; }
+
+    /* ── WHAT YOU GET ── */
+    .deliverables-section { background: rgba(31, 19, 70, 0.3); }
+    .deliverables-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: start;
+    }
+    .deliverable-list { list-style: none; }
+    .deliverable-list li {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 16px 0;
+      border-bottom: 1px solid rgba(103,61,230,0.15);
+    }
+    .deliverable-list li:last-child { border-bottom: none; }
+    .dl-icon {
+      width: 36px; height: 36px; flex-shrink: 0;
+      background: linear-gradient(135deg, rgba(103,61,230,0.3), rgba(53,125,249,0.3));
+      border: 1px solid rgba(103,61,230,0.35);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+    }
+    .dl-text strong { display: block; font-size: 0.95rem; font-weight: 600; margin-bottom: 2px; }
+    .dl-text span { font-size: 0.83rem; color: var(--muted); }
+    .deliverables-info {
+      background: linear-gradient(135deg, rgba(103,61,230,0.15), rgba(53,125,249,0.1));
+      border: 1px solid rgba(103,61,230,0.3);
+      border-radius: var(--radius);
+      padding: 36px;
+      position: sticky; top: 100px;
+    }
+    .info-label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 8px; }
+    .info-value { font-size: 1.8rem; font-weight: 800; margin-bottom: 24px; }
+    .info-divider { border: none; border-top: 1px solid rgba(103,61,230,0.2); margin: 20px 0; }
+    .info-steps { counter-reset: step; }
+    .info-step {
+      display: flex; gap: 14px; margin-bottom: 16px;
+    }
+    .step-num {
+      width: 28px; height: 28px; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--purple), var(--blue));
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; font-weight: 700;
+    }
+    .step-text { font-size: 0.9rem; color: var(--muted); padding-top: 4px; }
+
+    /* ── IDEAL CLIENT ── */
+    .ideal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+    .ideal-card { padding: 32px; }
+    .ideal-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; }
+    .check-list, .x-list { list-style: none; }
+    .check-list li, .x-list li {
+      display: flex; align-items: flex-start; gap: 10px;
+      margin-bottom: 12px; font-size: 0.9rem; color: var(--muted);
+    }
+    .check-list li::before {
+      content: '✓'; flex-shrink: 0;
+      width: 22px; height: 22px;
+      background: rgba(0, 176, 144, 0.2);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: #00b090; font-size: 0.75rem; font-weight: 700;
+    }
+    .x-list li::before {
+      content: '✕'; flex-shrink: 0;
+      width: 22px; height: 22px;
+      background: rgba(255, 80, 80, 0.15);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: #ff5050; font-size: 0.7rem; font-weight: 700;
+    }
+    .ideal-card.yes-card {
+      border-left: 3px solid #00b090;
+      background: rgba(0,176,144,0.05);
+      border-top: 1px solid rgba(0,176,144,0.15);
+      border-right: 1px solid rgba(0,176,144,0.08);
+      border-bottom: 1px solid rgba(0,176,144,0.08);
+    }
+    .ideal-card.no-card {
+      border-left: 3px solid rgba(255,80,80,0.5);
+      background: rgba(255,80,80,0.04);
+      border-top: 1px solid rgba(255,80,80,0.12);
+      border-right: 1px solid rgba(255,80,80,0.06);
+      border-bottom: 1px solid rgba(255,80,80,0.06);
+    }
+
+    /* ── TESTIMONIALS ── */
+    .testimonials-section { background: rgba(31, 19, 70, 0.35); }
+    .testimonial-card { padding: 32px; }
+    .stars { color: #ffcd35; font-size: 1.1rem; margin-bottom: 16px; }
+    .testimonial-card blockquote {
+      font-size: 0.95rem; color: var(--muted);
+      font-style: italic; line-height: 1.7; margin-bottom: 24px;
+    }
+    .testimonial-author { display: flex; align-items: center; gap: 12px; }
+    .author-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--blue));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 1rem; flex-shrink: 0;
+    }
+    .author-name { font-size: 0.9rem; font-weight: 700; }
+    .author-role { font-size: 0.8rem; color: var(--muted); }
+
+    /* ── CONTACT FORM ── */
+    .form-section { position: relative; }
+    .form-wrapper {
+      max-width: 680px; margin: 0 auto;
+    }
+    .form-card {
+      padding: 48px;
+      background: rgba(103,61,230,0.08);
+      border: 1px solid rgba(103,61,230,0.25);
+      border-radius: 20px;
+      backdrop-filter: blur(16px);
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+      display: block; font-size: 0.85rem; font-weight: 600;
+      color: var(--white); margin-bottom: 8px;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(103,61,230,0.3);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      color: var(--white);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    .form-group select option { background: #1F1346; }
+    .form-group input::placeholder,
+    .form-group textarea::placeholder { color: rgba(160,165,192,0.7); }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 3px rgba(103,61,230,0.2);
+    }
+    .form-group textarea { resize: vertical; min-height: 100px; }
+    .form-disclaimer {
+      font-size: 0.78rem; color: var(--muted);
+      margin-top: 14px; text-align: center; line-height: 1.5;
+    }
+    .form-success {
+      display: none; text-align: center; padding: 40px 20px;
+    }
+    .form-success .success-icon { font-size: 3rem; margin-bottom: 16px; }
+    .form-success h3 { font-size: 1.4rem; font-weight: 700; margin-bottom: 10px; }
+    .form-success p { color: var(--muted); }
+
+    /* ── GUARANTEE ── */
+    .guarantee-banner {
+      background: linear-gradient(135deg, rgba(103,61,230,0.25), rgba(53,125,249,0.2));
+      border: 1px solid rgba(103,61,230,0.35);
+      border-radius: 20px;
+      padding: 48px 40px;
+      display: flex; align-items: center; gap: 32px;
+      margin: 0 auto; max-width: 900px;
+    }
+    .guarantee-icon { font-size: 4rem; flex-shrink: 0; }
+    .guarantee-text h2 { font-size: 1.6rem; font-weight: 800; margin-bottom: 10px; }
+    .guarantee-text p { color: var(--muted); font-size: 0.95rem; line-height: 1.6; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: rgba(8,5,20,0.9);
+      border-top: 1px solid rgba(103,61,230,0.2);
+      padding: 56px 0 32px;
+      position: relative; z-index: 1;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 48px; margin-bottom: 48px;
+    }
+    .footer-brand p {
+      font-size: 0.88rem; color: var(--muted);
+      margin-top: 14px; line-height: 1.7; max-width: 300px;
+    }
+    .footer-social { display: flex; gap: 10px; margin-top: 20px; }
+    .social-icon {
+      width: 36px; height: 36px;
+      background: rgba(103,61,230,0.15);
+      border: 1px solid rgba(103,61,230,0.25);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      text-decoration: none; color: var(--muted);
+      font-size: 0.85rem; font-weight: 700;
+      transition: background 0.2s, color 0.2s;
+    }
+    .social-icon:hover { background: var(--purple); color: #fff; }
+    .footer-col h4 {
+      font-size: 0.85rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--white); margin-bottom: 16px;
+    }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 10px; }
+    .footer-col a {
+      font-size: 0.88rem; color: var(--muted);
+      text-decoration: none; transition: color 0.2s;
+    }
+    .footer-col a:hover { color: var(--purple-lt); }
+    .footer-bottom {
+      border-top: 1px solid rgba(103,61,230,0.15);
+      padding-top: 24px;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 12px;
+    }
+    .footer-bottom p { font-size: 0.82rem; color: var(--muted); }
+    .footer-legal { display: flex; gap: 20px; }
+    .footer-legal a { font-size: 0.82rem; color: var(--muted); text-decoration: none; }
+    .footer-legal a:hover { color: var(--purple-lt); }
+
+    /* ── SCROLL TOP ── */
+    .scroll-top {
+      position: fixed; bottom: 28px; right: 28px; z-index: 99;
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, var(--purple), var(--blue));
+      border-radius: 50%; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 1.1rem;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s, transform 0.2s;
+      box-shadow: 0 6px 20px rgba(103,61,230,0.45);
+    }
+    .scroll-top.show { opacity: 1; pointer-events: auto; }
+    .scroll-top:hover { transform: translateY(-3px); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .hero-grid { grid-template-columns: 1fr; text-align: center; }
+      .hero p { margin-left: auto; margin-right: auto; }
+      .hero-ctas { justify-content: center; }
+      .hero-visual { max-width: 420px; margin: 0 auto; }
+      .deliverables-grid { grid-template-columns: 1fr; }
+      .deliverables-info { position: static; }
+      .ideal-grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      .guarantee-banner { flex-direction: column; text-align: center; }
+    }
+    @media (max-width: 600px) {
+      .form-card { padding: 28px 20px; }
+      .form-row { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .footer-bottom { flex-direction: column; text-align: center; }
+      .hero h1 { font-size: 2rem; }
+      .grid-4 { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Background orbs -->
+<div class="bg-orbs">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+
+<!-- Scroll top button -->
+<button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Volver arriba">↑</button>
+
+<!-- ══════════════════════ NAVBAR ══════════════════════ -->
+<nav id="navbar">
+  <div class="container nav-inner">
+    <a href="#" class="logo">
+      <!--
+        SVG construido geométricamente desde logo.png:
+        Hexágono exterior flat-top radio 46, centro (50,50).
+        Hexágono interior flat-top radio 22 → zona oscura central.
+        3 canales en L (máscara) crean las separaciones entre paletas.
+      -->
+      <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <mask id="skLogo">
+            <!-- Área visible: hexágono exterior blanco -->
+            <polygon points="96,50 73,10 27,10 4,50 27,90 73,90" fill="white"/>
+            <!-- Ocultar centro: hexágono interior negro -->
+            <polygon points="72,50 61,31 39,31 28,50 39,69 61,69" fill="black"/>
+            <!-- Canal L entre paleta superior-derecha y paleta superior-izquierda -->
+            <polyline points="50,10 50,31 61,31"
+                      stroke="black" stroke-width="5"
+                      stroke-linecap="butt" stroke-linejoin="miter" fill="none"/>
+            <!-- Canal L entre paleta superior-derecha y paleta inferior -->
+            <polyline points="85,70 67,60 61,69"
+                      stroke="black" stroke-width="5"
+                      stroke-linecap="butt" stroke-linejoin="miter" fill="none"/>
+            <!-- Canal L entre paleta superior-izquierda y paleta inferior -->
+            <polyline points="15,70 33,60 28,50"
+                      stroke="black" stroke-width="5"
+                      stroke-linecap="butt" stroke-linejoin="miter" fill="none"/>
+          </mask>
+        </defs>
+        <polygon points="96,50 73,10 27,10 4,50 27,90 73,90"
+                 fill="white" mask="url(#skLogo)"/>
+      </svg>
+      <div class="logo-labels">
+        <span class="logo-name">S K Tech</span>
+        <span class="logo-tagline">Services Knowledge Technology</span>
+      </div>
+    </a>
+    <a href="#contacto" class="btn-primary" style="padding:10px 24px;font-size:0.9rem;">Solicitar Demo →</a>
+  </div>
+</nav>
+
+<!-- ══════════════════════ HERO ══════════════════════ -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-grid">
+      <div class="hero-content fade-in">
+        <div class="hero-badge">🚀 Automatización inteligente para consorcios</div>
+        <h1>Automatizá tu<br/><span class="gradient-text">administración de consorcios</span><br/>en 15 días o menos</h1>
+        <p>Eliminá las liquidaciones manuales, la comunicación caótica y las moras de expensas. Transformá tu gestión con tecnología que trabaja por vos.</p>
+        <div class="hero-ctas">
+          <a href="#contacto" class="btn-primary">Quiero automatizar mi consorcio →</a>
+          <a href="#que-obtenes" class="btn-outline">Ver cómo funciona</a>
+        </div>
+      </div>
+      <div class="hero-visual fade-in fade-in-delay-2">
+        <div class="glass-card hero-card floating" style="animation-delay:0s">
+          <div class="icon">📊</div>
+          <div class="label">Liquidaciones</div>
+          <div class="sub">Automáticas al instante</div>
+        </div>
+        <div class="glass-card hero-card floating" style="animation-delay:0.8s">
+          <div class="icon">📱</div>
+          <div class="label">Comunicación</div>
+          <div class="sub">WhatsApp + Portal digital</div>
+        </div>
+        <div class="glass-card hero-card floating" style="animation-delay:0.4s">
+          <div class="icon">💳</div>
+          <div class="label">Cobro de expensas</div>
+          <div class="sub">Recordatorios automáticos</div>
+        </div>
+        <div class="glass-card hero-card floating" style="animation-delay:1.2s">
+          <div class="icon">📂</div>
+          <div class="label">Documentos</div>
+          <div class="sub">Gestión centralizada</div>
+        </div>
+        <div class="hero-card-big floating" style="animation-delay:0.6s">
+          <div class="hero-stat gradient-text">-70%</div>
+          <div class="hero-stat-label">Reducción de tiempo administrativo promedio</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════ PAIN POINTS ══════════════════════ -->
+<section class="pain-section">
+  <div class="container">
+    <div class="text-center fade-in">
+      <span class="section-label">⚠️ El problema</span>
+      <h2 class="section-title">¿Te identificás con alguno de estos <span class="gradient-text">problemas?</span></h2>
+      <p class="section-sub">Los administradores de consorcios pierden horas cada semana en tareas repetitivas que la tecnología puede resolver.</p>
+    </div>
+    <div class="grid-4">
+      <div class="pain-card fade-in fade-in-delay-1">
+        <div class="pain-icon">🧮</div>
+        <h3>Liquidaciones que te roban horas</h3>
+        <p>Calculás expensas en planillas de Excel, con riesgo constante de errores que generan reclamos y pérdida de confianza.</p>
+      </div>
+      <div class="pain-card fade-in fade-in-delay-2">
+        <div class="pain-icon">💬</div>
+        <h3>Grupos de WhatsApp imposibles</h3>
+        <p>Cientos de mensajes diarios de copropietarios, quejas, reclamos y pedidos que se pierden y quedan sin respuesta.</p>
+      </div>
+      <div class="pain-card fade-in fade-in-delay-3">
+        <div class="pain-icon">📁</div>
+        <h3>Documentos perdidos o desactualizados</h3>
+        <p>Actas de asambleas, reglamentos, contratos de proveedores y presupuestos dispersos en carpetas sin orden.</p>
+      </div>
+      <div class="pain-card fade-in fade-in-delay-4">
+        <div class="pain-icon">💸</div>
+        <h3>Morosidad sin seguimiento real</h3>
+        <p>Copropietarios con deuda acumulada porque no existe un sistema de recordatorios automáticos y seguimiento de pagos.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════ BENEFITS ══════════════════════ -->
+<section>
+  <div class="container">
+    <div class="text-center fade-in">
+      <span class="section-label">✅ La solución</span>
+      <h2 class="section-title">Lo que <span class="gradient-text">SKTech</span> hace por vos</h2>
+      <p class="section-sub">Implementamos un sistema integral de automatización adaptado específicamente a la gestión de consorcios y propiedad horizontal.</p>
+    </div>
+    <div class="grid-4">
+      <div class="glass-card benefit-card fade-in fade-in-delay-1">
+        <div class="benefit-icon">🤖</div>
+        <h3>Liquidaciones automáticas</h3>
+        <p>Generá y enviá las liquidaciones de expensas en minutos, con cálculo automático por unidad, prorrateo y ajuste por índices.</p>
+      </div>
+      <div class="glass-card benefit-card fade-in fade-in-delay-2">
+        <div class="benefit-icon">📲</div>
+        <h3>Portal digital para copropietarios</h3>
+        <p>Cada propietario accede a su cuenta, historial de pagos, documentos y puede reportar incidencias sin llamarte.</p>
+      </div>
+      <div class="glass-card benefit-card fade-in fade-in-delay-3">
+        <div class="benefit-icon">🔔</div>
+        <h3>Cobro automatizado de expensas</h3>
+        <p>Recordatorios automáticos por WhatsApp y email antes y después del vencimiento. Reducí la morosidad hasta un 60%.</p>
+      </div>
+      <div class="glass-card benefit-card fade-in fade-in-delay-4">
+        <div class="benefit-icon">📊</div>
+        <h3>Reportes e inteligencia de gestión</h3>
+        <p>Dashboard en tiempo real con estado financiero del consorcio, ranking de morosos, gastos por categoría y proyecciones.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════ WHAT YOU GET ══════════════════════ -->
+<section class="deliverables-section" id="que-obtenes">
+  <div class="container">
+    <div class="text-center fade-in">
+      <span class="section-label">📦 El servicio</span>
+      <h2 class="section-title">¿Qué obtenés con <span class="gradient-text">SKTech?</span></h2>
+      <p class="section-sub">Una implementación completa, sin complicaciones técnicas, con acompañamiento desde el día 1.</p>
+    </div>
+    <div class="deliverables-grid">
+      <ul class="deliverable-list fade-in">
+        <li>
+          <div class="dl-icon">⚡</div>
+          <div class="dl-text">
+            <strong>Diagnóstico inicial de tu operación</strong>
+            <span>Análisis de tus procesos actuales, identificación de cuellos de botella y mapa de automatización personalizado.</span>
+          </div>
+        </li>
+        <li>
+          <div class="dl-icon">🖥️</div>
+          <div class="dl-text">
+            <strong>Configuración del sistema a tu medida</strong>
+            <span>Setup completo del software con tus consorcios, unidades, propietarios y proveedores ya cargados.</span>
+          </div>
+        </li>
+        <li>
+          <div class="dl-icon">🔗</div>
+          <div class="dl-text">
+            <strong>Integración con tus herramientas actuales</strong>
+            <span>Conectamos con WhatsApp Business, MercadoPago, bancos y sistemas contables que ya usás.</span>
+          </div>
+        </li>
+        <li>
+          <div class="dl-icon">🎓</div>
+          <div class="dl-text">
+            <strong>Capacitación y onboarding completo</strong>
+            <span>Sesiones de entrenamiento para vos y tu equipo hasta que operes con total autonomía.</span>
+          </div>
+        </li>
+        <li>
+          <div class="dl-icon">🛡️</div>
+          <div class="dl-text">
+            <strong>Soporte técnico prioritario</strong>
+            <span>Acceso a soporte vía WhatsApp y portal con tiempo de respuesta garantizado en horario laboral.</span>
+          </div>
+        </li>
+        <li>
+          <div class="dl-icon">📈</div>
+          <div class="dl-text">
+            <strong>Reporte de impacto al mes 1</strong>
+            <span>Informe detallado con métricas reales de tiempo ahorrado, morosidad reducida y satisfacción de copropietarios.</span>
+          </div>
+        </li>
+      </ul>
+      <div class="deliverables-info fade-in fade-in-delay-2">
+        <div class="info-label">Tiempo de implementación</div>
+        <div class="info-value gradient-text">10 a 15 días</div>
+        <hr class="info-divider" />
+        <div style="font-size:0.85rem;color:var(--muted);margin-bottom:20px;">Sin interrumpir tu operación actual</div>
+        <div class="info-steps">
+          <div class="info-step">
+            <div class="step-num">1</div>
+            <div class="step-text"><strong style="color:var(--white)">Reunión de diagnóstico</strong> — Analizamos tu operación actual (gratis)</div>
+          </div>
+          <div class="info-step">
+            <div class="step-num">2</div>
+            <div class="step-text"><strong style="color:var(--white)">Plan personalizado</strong> — Diseñamos la solución específica para tu cartera</div>
+          </div>
+          <div class="info-step">
+            <div class="step-num">3</div>
+            <div class="step-text"><strong style="color:var(--white)">Implementación</strong> — Configuramos y conectamos todo en 2 semanas</div>
+          </div>
+          <div class="info-step">
+            <div class="step-num">4</div>
+            <div class="step-text"><strong style="color:var(--white)">Acompañamiento</strong> — Seguimiento mensual de resultados</div>
+          </div>
+        </div>
+        <hr class="info-divider" />
+        <a href="#contacto" class="btn-primary" style="width:100%;justify-content:center;margin-top:8px;">Empezar ahora →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════ IDEAL CLIENT ══════════════════════ -->
+<section>
+  <div class="container">
+    <div class="text-center fade-in">
+      <span class="section-label">🎯 ¿Es para vos?</span>
+      <h2 class="section-title">Saber si <span class="gradient-text">encajás</span> te ahorra tiempo a ambos</h2>
+      <p class="section-sub">Trabajamos con administradores que están listos para dar el salto digital y hacer crecer su negocio.</p>
+    </div>
+    <div class="ideal-grid fade-in">
+      <div class="ideal-card yes-card">
+        <h3>✅ Recomendado si sos...</h3>
+        <ul class="check-list">
+          <li>Administrador con 3 o más consorcios en cartera</li>
+          <li>Gestor que pierde más de 10 horas semanales en tareas administrativas</li>
+          <li>Profesional que quiere escalar sin contratar más personal</li>
+          <li>Administrador con problemas recurrentes de morosidad</li>
+          <li>Alguien que recibe quejas constantes por falta de comunicación</li>
+          <li>Quien busca diferenciarse de la competencia con tecnología</li>
+        </ul>
+      </div>
+      <div class="ideal-card no-card">
+        <h3>❌ No es para vos si...</h3>
+        <ul class="x-list">
+          <li>Solo administrás 1 consorcio pequeño de forma ocasional</li>
+          <li>No tenés intención de digitalizar tu operación en el corto plazo</li>
+          <li>Buscás una solución completamente gratuita sin inversión</li>
+          <li>No contás con tiempo mínimo para el proceso de onboarding</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════ TESTIMONIALS ══════════════════════ -->
+<section class="testimonials-section">
+  <div class="container">
+    <div class="text-center fade-in">
+      <span class="section-label">💬 Testimonios</span>
+      <h2 class="section-title">Lo que dicen los administradores que ya <span class="gradient-text">automatizaron</span></h2>
+      <p class="section-sub">Resultados reales de profesionales de la administración de consorcios en.</p>
+    </div>
+    <div class="grid-3">
+      <div class="glass-card testimonial-card fade-in fade-in-delay-1">
+        <div class="stars">★★★★★</div>
+        <blockquote>"Antes tardaba 2 días en cerrar las liquidaciones de todos mis consorcios. Ahora lo hago en 2 horas. SKTech cambió completamente mi forma de trabajar."</blockquote>
+        <div class="testimonial-author">
+          <div class="author-avatar">MR</div>
+          <div>
+            <div class="author-name">Marcela Rodríguez</div>
+            <div class="author-role">Administradora — 8 consorcios, CABA</div>
+          </div>
+        </div>
+      </div>
+      <div class="glass-card testimonial-card fade-in fade-in-delay-2">
+        <div class="stars">★★★★★</div>
+        <blockquote>"La morosidad bajó del 25% al 8% en el primer mes. El sistema de recordatorios automáticos hizo lo que yo nunca pude hacer manualmente."</blockquote>
+        <div class="testimonial-author">
+          <div class="author-avatar">JL</div>
+          <div>
+            <div class="author-name">Jorge Lamberti</div>
+            <div class="author-role">Administrador matriculado — GBA Norte</div>
+          </div>
+        </div>
+      </div>
+      <div class="glass-card testimonial-card fade-in fade-in-delay-3">
+        <div class="stars">★★★★★</div>
+        <blockquote>"Pasé de recibir 80 WhatsApps por día a que los copropietarios usen el portal. Recuperé mi tiempo libre y mi familia lo notó."</blockquote>
+        <div class="testimonial-author">
+          <div class="author-avatar">CS</div>
+          <div>
+            <div class="author-name">Carolina Suárez</div>
+            <div class="author-role">Administradora — Rosario, Santa Fe</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════ GUARANTEE ══════════════════════ -->
+<section style="padding: 0 0 80px;">
+  <div class="container">
+    <div class="guarantee-banner fade-in">
+      <div class="guarantee-icon">🛡️</div>
+      <div class="guarantee-text">
+        <h2>Garantía de resultados a 30 días</h2>
+        <p>Si en los primeros 30 días de implementación no percibís una reducción real en tu tiempo de gestión y una mejora en el cobro de expensas, te devolvemos el costo de la implementación. Sin preguntas, sin letra chica.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════ CONTACT FORM ══════════════════════ -->
+<section class="form-section" id="contacto">
+  <div class="container">
+    <div class="text-center fade-in" style="margin-bottom:48px;">
+      <span class="section-label">📋 Contacto</span>
+      <h2 class="section-title">Solicitá tu <span class="gradient-text">diagnóstico gratuito</span></h2>
+      <p class="section-sub" style="margin-bottom:0">Respondemos en menos de 48 horas hábiles. Cupos limitados a 5 administradores por mes.</p>
+    </div>
+    <div class="form-wrapper">
+      <div class="form-card fade-in">
+        <div id="formContent">
+          <form id="contactForm" novalidate>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="nombre">Nombre completo *</label>
+                <input type="text" id="nombre" name="nombre" placeholder="Tu nombre" required />
+              </div>
+              <div class="form-group">
+                <label for="empresa">Empresa / Nombre de gestora *</label>
+                <input type="text" id="empresa" name="empresa" placeholder="Ej: Administración Suárez" required />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="email">Email corporativo *</label>
+                <input type="email" id="email" name="email" placeholder="vos@tuempresa.com" required />
+              </div>
+              <div class="form-group">
+                <label for="telefono">Teléfono / WhatsApp *</label>
+                <input type="tel" id="telefono" name="telefono" placeholder="+54 11 XXXX XXXX" required />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="consorcios">¿Cuántos consorcios administrás? *</label>
+                <select id="consorcios" name="consorcios" required>
+                  <option value="">Seleccioná una opción</option>
+                  <option>1 a 3 consorcios</option>
+                  <option>4 a 10 consorcios</option>
+                  <option>11 a 25 consorcios</option>
+                  <option>Más de 25 consorcios</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="unidades">Unidades totales aproximadas</label>
+                <select id="unidades" name="unidades">
+                  <option value="">Seleccioná una opción</option>
+                  <option>Menos de 50 unidades</option>
+                  <option>50 a 150 unidades</option>
+                  <option>151 a 400 unidades</option>
+                  <option>Más de 400 unidades</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="problema">¿Cuál es tu mayor dolor de cabeza hoy en la gestión? *</label>
+              <textarea id="problema" name="problema" placeholder="Ej: Las liquidaciones me toman demasiado tiempo, tengo mucha morosidad, los copropietarios me llaman a cualquier hora..." required></textarea>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-weight:400;font-size:0.83rem;color:var(--muted)">
+                <input type="checkbox" id="consent" required style="margin-top:3px;width:auto;flex-shrink:0;accent-color:var(--purple)" />
+                Acepto el tratamiento de mis datos personales para que SKTech se contacte conmigo con información sobre sus servicios.
+              </label>
+            </div>
+            <div style="margin-top:28px;">
+              <button type="submit" class="btn-primary" style="width:100%;justify-content:center;font-size:1rem;padding:16px;">
+                Solicitar diagnóstico gratuito →
+              </button>
+            </div>
+          </form>
+          <p class="form-disclaimer">🔒 Tus datos están protegidos. Nunca los compartiremos con terceros.<br/>Respondemos en menos de 48 horas hábiles.</p>
+        </div>
+        <div class="form-success" id="formSuccess">
+          <div class="success-icon">🎉</div>
+          <h3>¡Solicitud recibida!</h3>
+          <p>Gracias por tu interés en SKTech. Un especialista de nuestro equipo se comunicará con vos en las próximas 48 horas hábiles para coordinar el diagnóstico gratuito de tu operación.</p>
+          <br/>
+          <a href="#" class="btn-primary" style="margin-top:8px;">Volver al inicio</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════ FOOTER ══════════════════════ -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="#" class="logo">
+          <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <mask id="skLogoFt">
+                <polygon points="96,50 73,10 27,10 4,50 27,90 73,90" fill="white"/>
+                <polygon points="72,50 61,31 39,31 28,50 39,69 61,69" fill="black"/>
+                <polyline points="50,10 50,31 61,31"
+                          stroke="black" stroke-width="5"
+                          stroke-linecap="butt" stroke-linejoin="miter" fill="none"/>
+                <polyline points="85,70 67,60 61,69"
+                          stroke="black" stroke-width="5"
+                          stroke-linecap="butt" stroke-linejoin="miter" fill="none"/>
+                <polyline points="15,70 33,60 28,50"
+                          stroke="black" stroke-width="5"
+                          stroke-linecap="butt" stroke-linejoin="miter" fill="none"/>
+              </mask>
+            </defs>
+            <polygon points="96,50 73,10 27,10 4,50 27,90 73,90"
+                     fill="white" mask="url(#skLogoFt)"/>
+          </svg>
+          <div class="logo-labels">
+            <span class="logo-name">S K Tech</span>
+            <span class="logo-tagline">Services Knowledge Technology</span>
+          </div>
+        </a>
+        <a href="#contacto" class="btn-primary" style="margin-top:20px;font-size:0.9rem;padding:12px 28px;">Solicitar Demo →</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 SKTech. Todos los derechos reservados.</p>
+      <div class="footer-legal">
+        <a href="#">Política de privacidad</a>
+        <a href="#">Términos de uso</a>
+        <a href="#">Aviso legal</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // ── Navbar scroll effect
+  const navbar = document.getElementById('navbar');
+  const scrollTopBtn = document.getElementById('scrollTop');
+
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 60) {
+      navbar.classList.add('scrolled');
+      scrollTopBtn.classList.add('show');
+    } else {
+      navbar.classList.remove('scrolled');
+      scrollTopBtn.classList.remove('show');
+    }
+  });
+
+  // ── Fade in on scroll
+  const fadeEls = document.querySelectorAll('.fade-in');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+  fadeEls.forEach(el => observer.observe(el));
+
+  // ── Form submission
+  const form = document.getElementById('contactForm');
+  const formContent = document.getElementById('formContent');
+  const formSuccess = document.getElementById('formSuccess');
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    // Basic validation
+    const requiredFields = form.querySelectorAll('[required]');
+    let valid = true;
+
+    requiredFields.forEach(field => {
+      field.style.borderColor = '';
+      if (!field.value.trim() || (field.type === 'checkbox' && !field.checked)) {
+        field.style.borderColor = 'rgba(255, 80, 80, 0.7)';
+        field.style.boxShadow = '0 0 0 3px rgba(255,80,80,0.15)';
+        valid = false;
+      }
+    });
+
+    if (!valid) {
+      const firstError = form.querySelector('[required]:invalid, [required][style*="rgb(255"]');
+      firstError && firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    // Simulate submission
+    const btn = form.querySelector('button[type=submit]');
+    btn.textContent = 'Enviando...';
+    btn.disabled = true;
+
+    setTimeout(() => {
+      formContent.style.display = 'none';
+      formSuccess.style.display = 'block';
+    }, 1200);
+  });
+
+  // Reset border on input
+  form.querySelectorAll('input, select, textarea').forEach(el => {
+    el.addEventListener('input', () => {
+      el.style.borderColor = '';
+      el.style.boxShadow = '';
+    });
+  });
+</script>
+</body>
+</html>
